@@ -1,29 +1,19 @@
 import fastify from 'fastify'
-import { PrismaClient } from '@prisma/client'
-import { z } from 'zod'
+import cookie from '@fastify/cookie'
+import { createPoll } from './routes/create-poll'
+import { getPoll } from './routes/get-poll'
+import { voteOnPoll } from './routes/vote-on-poll'
 
 const app = fastify()
 
-const prisma = new PrismaClient()
-
-//localhost:3333/polls
-app.post('/polls', async (request, reply) => {
-    //estrutura que espero que o request body tenha
-    const createPollBody = z.object({
-        title: z.string()
-    })
-
-    // confere se o request.body esta na mesma estrutura que declarado anteriormente, caso nao, dá erro
-    const { title } = createPollBody.parse(request.body)
-
-    const poll = await prisma.poll.create({
-        data: {
-            title,
-        }
-    })
-
-    return reply.status(201).send({ pollId: poll.id })
+app.register(cookie, {
+    secret: "polls-app-nlw",
+    hook: 'onRequest',
 })
+
+app.register(createPoll)
+app.register(getPoll)
+app.register(voteOnPoll)
 
 // a porta é a do local host
 // e ai quando (then) o server entrar no ar, vai dar o console.log
